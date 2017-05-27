@@ -288,7 +288,6 @@ class Coin extends Actor {
     this.spring = random(0, 2 * Math.PI);
     this.springSpeed = 8;
     this.springDist = 0.07;
-
   }
 
   get type() {
@@ -296,7 +295,7 @@ class Coin extends Actor {
   }
 
   updateSpring(time = 1) {
-    this.spring = this.spring + this.springSpeed * time;
+    this.spring += this.springSpeed * time;
   }
 
   getSpringVector() {
@@ -315,10 +314,9 @@ class Coin extends Actor {
 }
 
 class Player extends Actor {
-  constructor(pos = new Vector(0, 0), size = new Vector(0.8, 1.5)) {
-    super();
-    this.pos = pos.plus(new Vector(0, -0.5));
-    this.size = size;
+  constructor(pos) {
+    super(pos, new Vector(0.8, 1.5));
+    this.pos = this.pos.plus(new Vector(0, -0.5));
   }
   get type() {
     return 'player';
