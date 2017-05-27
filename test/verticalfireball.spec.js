@@ -15,7 +15,7 @@ describe('Класс VerticalFireball', () => {
     });
 
     it('Имеет свойство type равное fireball', () => {
-      const ball = new VerticalFireball();
+      const ball = new HorizontalFireball();
 
       expect(ball.type).to.equal('fireball');
     });
