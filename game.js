@@ -285,6 +285,7 @@ class Coin extends Actor {
   constructor(pos) {
     super(pos, new Vector(0.6, 0.6));
     this.pos = this.pos.plus(new Vector(0.2, 0.1));
+    this.post = this.pos;
     this.spring = random(0, 2 * Math.PI);
     this.springSpeed = 8;
     this.springDist = 0.07;
@@ -305,7 +306,7 @@ class Coin extends Actor {
 
   getNextPosition(time = 1) {
     this.updateSpring(time);
-    return this.pos.plus(this.getSpringVector());
+    return this.pos = this.post.plus(this.getSpringVector());
   }
 
   act(time) {
