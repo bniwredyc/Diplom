@@ -53,23 +53,10 @@ class Actor {
   isIntersect(item) {
     if (!(item instanceof Actor && arguments.length != 0)) throw new Error('Object must to be an instance of Actor');
 
-    if (item === this) {
-      return false;
-    }
-    if (item.right < this.left || item.top > this.bottom || item.left > this.right || item.bottom < this.top) {
-      return false;
-    }
-    if (item.right === this.left || item.left === this.right || item.top === this.bottom || item.bottom === this.top) {
-      return false;
-    }
-    if (-item.left === this.left && -item.top === this.top && -item.right === this.right && -item.bottom === this.bottom) {
-      return false;
-    }
-    if (item.left > this.left && item.top > this.top && item.right < this.right && item.bottom < this.bottom) {
+    if (item.left < this.right && item.right > this.left && item.top < this.bottom && item.bottom > this.top && item !== this) {
       return true;
-    }
-    if (item.left < this.right && item.right > this.left && item.top < this.bottom && item.bottom > this.top) {
-      return true;
+    } else {
+      return false;
     }
   }
 }
@@ -81,7 +68,7 @@ class Level {
     this.height = grid.length;
     this.status = null;
     this.finishDelay = 1;
-    this.player = this.actors.filter((actor) => actor.type === 'player')[0];
+    this.player = this.actors.find((actor) => actor.type === 'player');
   }
 
   get width() {
