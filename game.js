@@ -7,11 +7,9 @@ class Vector {
   }
 
   plus(v) {
-    if (v instanceof Vector) {
-      return new Vector(this.x + v.x, this.y + v.y)
-    } else {
-      throw new Error('v - must to be a vector');
-    }
+    if (!(v instanceof Vector)) throw new Error('v - must to be a vector');
+
+    return new Vector(this.x + v.x, this.y + v.y)
   }
 
   times(n) {
@@ -22,32 +20,19 @@ class Vector {
 
 class Actor {
   constructor(pos = new Vector(0, 0), size = new Vector(1, 1), speed = new Vector(0, 0)) {
-    if (pos instanceof Vector) {
-      this.pos = pos;
-    } else {
-      throw new Error('pos - must to be a vector');
-    }
 
-    if (size instanceof Vector) {
-      this.size = size;
-    } else {
-      throw new Error('size - must to be a vector');
-    }
+    if (!(pos instanceof Vector && size instanceof Vector && speed instanceof Vector)) throw new Error('pos - must to be a vector');
 
-    if (speed instanceof Vector) {
-      this.speed = speed;
-    } else {
-      throw new Error('speed - must to be a vector');
-    }
+    this.pos = pos;
+    this.size = size;
+    this.speed = speed;
   }
 
   get type() {
     return 'actor'
   }
 
-  act() {
-
-  }
+  act() {}
 
   get left() {
     return this.pos.x;
@@ -66,28 +51,25 @@ class Actor {
   }
 
   isIntersect(item) {
-    if (item instanceof Actor && arguments.length != 0) {
-      if (item === this) {
-        return false;
-      }
-      if (item.right < this.left || item.top > this.bottom || item.left > this.right || item.bottom < this.top) {
-        return false;
-      }
-      if (item.right === this.left || item.left === this.right || item.top === this.bottom || item.bottom === this.top) {
-        return false;
-      }
-      if (-item.left === this.left && -item.top === this.top && -item.right === this.right && -item.bottom === this.bottom) {
-        return false;
-      }
-      if (item.left > this.left && item.top > this.top && item.right < this.right && item.bottom < this.bottom) {
-        return true;
-      }
-      if (item.left < this.right && item.right > this.left && item.top < this.bottom && item.bottom > this.top) {
-        return true;
-      }
+    if (!(item instanceof Actor && arguments.length != 0)) throw new Error('Object must to be an instance of Actor');
 
-    } else {
-      throw new Error('Object must to be an instance of Actor');
+    if (item === this) {
+      return false;
+    }
+    if (item.right < this.left || item.top > this.bottom || item.left > this.right || item.bottom < this.top) {
+      return false;
+    }
+    if (item.right === this.left || item.left === this.right || item.top === this.bottom || item.bottom === this.top) {
+      return false;
+    }
+    if (-item.left === this.left && -item.top === this.top && -item.right === this.right && -item.bottom === this.bottom) {
+      return false;
+    }
+    if (item.left > this.left && item.top > this.top && item.right < this.right && item.bottom < this.bottom) {
+      return true;
+    }
+    if (item.left < this.right && item.right > this.left && item.top < this.bottom && item.bottom > this.top) {
+      return true;
     }
   }
 }
@@ -103,16 +85,9 @@ class Level {
   }
 
   get width() {
-    let max = 0;
+    if (this.grid.length === 0) return 0;
+    return Math.max(...this.grid.map(subArray => subArray.length));
 
-    if (this.grid.length) {
-      for (let i = 0; i < this.grid.length; i++) {
-        if (max < this.grid[i].length) {
-          max = this.grid[i].length;
-        }
-      }
-    }
-    return max;
   }
 
   isFinished() {
@@ -156,12 +131,11 @@ class Level {
   }
 
   playerTouched(type, actor) {
-    if (type === 'lava' || type === 'fireball') {
-      this.status = "lost";
-    } else if (type === "coin") {
+    if (type === 'lava' || type === 'fireball') this.status = 'lost';
+    if (type === 'coin') {
       this.actors = this.actors.filter(other => other !== actor);
       if (this.noMoreActors('coin')) {
-        this.status = "won";
+        this.status = 'won';
       }
     }
   }
@@ -172,10 +146,7 @@ class LevelParser {
     this.symbol = symbol;
   }
   actorFromSymbol(ch) {
-    if (!this.symbol) {
-      return this.symbol = undefined;
-    }
-    return this.symbol[ch];
+    if (this.symbol) return this.symbol[ch];
   }
 
   obstacleFromSymbol(ch) {
@@ -194,13 +165,14 @@ class LevelParser {
 
   createActors(plan) {
     let actors = [];
+    if (this.symbol === undefined) return [];
 
     for (let x = 0; x < plan.length; x++) {
       for (let y = 0; y < plan[x].length; y++) {
-        for (let symb in this.symbol) {
-          if (symb === plan[x][y]) {
-            let actor = new this.symbol[symb](new Vector(y, x));
 
+        if (typeof this.symbol[plan[x][y]] === 'function') {
+          let actor = new this.symbol[plan[x][y]](new Vector(y, x));
+          if (actor instanceof Actor) {
             actors.push(actor);
           }
         }
@@ -236,11 +208,9 @@ class Fireball extends Actor {
 
   act(time, level) {
     let newPos = this.getNextPosition(time);
-    if (level.obstacleAt(newPos, this.size)) {
-      this.handleObstacle();
-    } else {
-      this.pos = newPos;
-    }
+    if (level.obstacleAt(newPos, this.size)) return this.handleObstacle();
+
+    return this.pos = newPos;
   }
 }
 
@@ -249,18 +219,12 @@ class HorizontalFireball extends Fireball {
     super(pos, new Vector(2, 0));
     this.size = new Vector(1, 1);
   }
-  get type() {
-    return 'fireball'
-  }
 }
 
 class VerticalFireball extends Fireball {
   constructor(pos) {
     super(pos, new Vector(0, 2));
     this.size = new Vector(1, 1);
-  }
-  get type() {
-    return 'fireball'
   }
 }
 
@@ -270,16 +234,13 @@ class FireRain extends Fireball {
     this.size = new Vector(1, 1);
     this.oldPos = pos;
   }
-  get type() {
-    return 'fireball'
-  }
 
   handleObstacle() {
-    if (this.pos) this.pos = this.oldPos;
+    this.pos = this.oldPos;
   }
 }
 
-const random = (min, max) => Math.ceil((max - min + 1) * Math.random()) + min - 1;
+const random = (min, max) => Math.floor((max - min) * Math.random()) + min;
 
 class Coin extends Actor {
   constructor(pos) {
@@ -423,7 +384,7 @@ const schemas = [
   ]
 ];
 
-var actorDict = {
+const actorDict = {
   "@": Player,
   "=": HorizontalFireball,
   "|": VerticalFireball,
