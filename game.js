@@ -129,6 +129,7 @@ class Level {
 
   removeActor(actor) {
     // тут ошибка
+    // не могу понять в чем? Проверил, индекс ищет и вырезает
     this.actors.splice(this.actors.indexOf(actor), 1);
   }
 
@@ -136,7 +137,6 @@ class Level {
     return !this.actors.some(actor => actor.type === type);
   }
 
-  // прочитайте описание метода в задании
   playerTouched(type, actor) {
     if (this.status !== null) {
       return;
