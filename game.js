@@ -68,18 +68,16 @@ class Actor {
     if (item === this) {
       return false
     }
-
-    // отрицания в if лучше избегать, поэтому >= должно быть
-    if (!(item.left < this.right)) {
+    if (item.left >= this.right) {
       return false
     }
-    if (!(item.right > this.left)) {
+    if (item.right <= this.left) {
       return false
     }
-    if (!(item.top < this.bottom)) {
+    if (item.top >= this.bottom) {
       return false
     }
-    if (!(item.bottom > this.top)) {
+    if (item.bottom <= this.top) {
       return false
     }
     return true;
@@ -88,17 +86,13 @@ class Actor {
 
 class Level {
   constructor(grid = [], actors = []) {
-    this.grid = [...grid];
-    this.actors = [...actors];
-    this.height = grid.length;
+    this.grid = grid.slice();
+    this.actors = actors.slice();
+    this.height = this.grid.length;
+    this.width = Math.max(0,...this.grid.map(subArray => subArray.length));
     this.status = null;
     this.finishDelay = 1;
     this.player = this.actors.find((actor) => actor.type === 'player');
-  }
-
-  get width() {
-    // лучше заполнить в конструкторе, чтобы каждый раз не считать
-    return Math.max(0,...this.grid.map(subArray => subArray.length));
   }
 
   isFinished() {
@@ -144,6 +138,10 @@ class Level {
 
   // прочитайте описание метода в задании
   playerTouched(type, actor) {
+    if (this.status !== null) {
+      return;
+    }
+
     if (type === 'lava' || type === 'fireball') {
       this.status = 'lost';
     }
@@ -161,6 +159,7 @@ class LevelParser {
   constructor(symbol = {}) {
     this.symbol = symbol;
   }
+
   actorFromSymbol(ch) {
    return this.symbol[ch];
   }
@@ -169,29 +168,24 @@ class LevelParser {
     switch (ch) {
       case 'x' : return 'wall';
       case '!' : return 'lava';
-      // return забыли
-      default  : undefined;
+      default  : return undefined;
     }
 
   }
 
   createGrid(plan) {
-    return plan.map(char => {
-      // у ch некорректное значение по-умолчанию
-      return char.split('').map((ch = []) => this.obstacleFromSymbol(ch));
+    return plan.map((char = []) => {
+      return char.split('').map(ch => this.obstacleFromSymbol(ch));
     });
   }
 
   createActors(plan) {
     let actors = [];
 
-    for (let x = 0; x < plan.length; x++) {
-      for (let y = 0; y < plan[x].length; y++) {
-        if (typeof this.symbol[plan[x][y]] === 'function') {
-          // странная последовательность - по-идее должно быть new Vector(x, y)
-          //из-за перевернутых осей
-          // моменяйте местами x и y чтобы было правильно
-          let actor = new this.symbol[plan[x][y]](new Vector(y, x));
+    for (let y = 0; y < plan.length; y++) {
+      for (let x = 0; x < plan[y].length; x++) {
+        if (typeof this.symbol[plan[y][x]] === 'function') {
+          let actor = new this.symbol[plan[y][x]](new Vector(x, y));
           if (actor instanceof Actor) {
             actors.push(actor);
           }
@@ -226,8 +220,8 @@ class Fireball extends Actor {
   act(time, level) {
     let newPos = this.getNextPosition(time);
     if (level.obstacleAt(newPos, this.size)) {
-      // метод не должен ничего возвращать
-      return this.handleObstacle();
+      this.handleObstacle();
+      return;
     }
     this.pos = newPos;
   }
@@ -235,22 +229,19 @@ class Fireball extends Actor {
 
 class HorizontalFireball extends Fireball {
   constructor(pos) {
-    // конструктор базового класса принимает 2 аргумента
-    super(pos, new Vector(2, 0), new Vector(1, 1));
+    super(pos, new Vector(2, 0));
   }
 }
 
 class VerticalFireball extends Fireball {
   constructor(pos) {
-    // конструктор базового класса принимает 2 аргумента
-    super(pos, new Vector(0, 2), new Vector(1, 1));
+    super(pos, new Vector(0, 2));
   }
 }
 
 class FireRain extends Fireball {
   constructor(pos) {
-    // конструктор базового класса принимает 2 аргумента
-    super(pos, new Vector(0, 3), new Vector(1, 1));
+    super(pos, new Vector(0, 3));
     this.oldPos = pos;
   }
 
@@ -311,5 +302,6 @@ const actorDict = {
 };
 
 const parser = new LevelParser(actorDict);
-// не пишите длинные выражения в  одну строчку
-loadLevels().then(schemas => runGame(JSON.parse(schemas), parser, DOMDisplay)).then(() => alert('Вы выиграли приз!'));
+loadLevels()
+  .then(schemas => runGame(JSON.parse(schemas), parser, DOMDisplay))
+  .then(() => alert('Вы выиграли приз!'));
