@@ -68,6 +68,8 @@ class Actor {
     if (item === this) {
       return false
     }
+
+    // отрицания в if лучше избегать, поэтому >= должно быть
     if (!(item.left < this.right)) {
       return false
     }
@@ -95,6 +97,7 @@ class Level {
   }
 
   get width() {
+    // лучше заполнить в конструкторе, чтобы каждый раз не считать
     return Math.max(0,...this.grid.map(subArray => subArray.length));
   }
 
@@ -131,6 +134,7 @@ class Level {
   }
 
   removeActor(actor) {
+    // тут ошибка
     this.actors.splice(this.actors.indexOf(actor), 1);
   }
 
@@ -138,6 +142,7 @@ class Level {
     return !this.actors.some(actor => actor.type === type);
   }
 
+  // прочитайте описание метода в задании
   playerTouched(type, actor) {
     if (type === 'lava' || type === 'fireball') {
       this.status = 'lost';
@@ -164,6 +169,7 @@ class LevelParser {
     switch (ch) {
       case 'x' : return 'wall';
       case '!' : return 'lava';
+      // return забыли
       default  : undefined;
     }
 
@@ -171,6 +177,7 @@ class LevelParser {
 
   createGrid(plan) {
     return plan.map(char => {
+      // у ch некорректное значение по-умолчанию
       return char.split('').map((ch = []) => this.obstacleFromSymbol(ch));
     });
   }
@@ -183,6 +190,7 @@ class LevelParser {
         if (typeof this.symbol[plan[x][y]] === 'function') {
           // странная последовательность - по-идее должно быть new Vector(x, y)
           //из-за перевернутых осей
+          // моменяйте местами x и y чтобы было правильно
           let actor = new this.symbol[plan[x][y]](new Vector(y, x));
           if (actor instanceof Actor) {
             actors.push(actor);
@@ -218,6 +226,7 @@ class Fireball extends Actor {
   act(time, level) {
     let newPos = this.getNextPosition(time);
     if (level.obstacleAt(newPos, this.size)) {
+      // метод не должен ничего возвращать
       return this.handleObstacle();
     }
     this.pos = newPos;
@@ -226,18 +235,21 @@ class Fireball extends Actor {
 
 class HorizontalFireball extends Fireball {
   constructor(pos) {
+    // конструктор базового класса принимает 2 аргумента
     super(pos, new Vector(2, 0), new Vector(1, 1));
   }
 }
 
 class VerticalFireball extends Fireball {
   constructor(pos) {
+    // конструктор базового класса принимает 2 аргумента
     super(pos, new Vector(0, 2), new Vector(1, 1));
   }
 }
 
 class FireRain extends Fireball {
   constructor(pos) {
+    // конструктор базового класса принимает 2 аргумента
     super(pos, new Vector(0, 3), new Vector(1, 1));
     this.oldPos = pos;
   }
@@ -299,4 +311,5 @@ const actorDict = {
 };
 
 const parser = new LevelParser(actorDict);
+// не пишите длинные выражения в  одну строчку
 loadLevels().then(schemas => runGame(JSON.parse(schemas), parser, DOMDisplay)).then(() => alert('Вы выиграли приз!'));
